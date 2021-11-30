@@ -1,1 +1,206 @@
-# Josh_Task
+# MNIST ON FLASK <!-- omit in toc -->
+
+This repository stores a test to demonstrate skills for Josh.
+
+- [PURPOSE](#purpose)
+- [DEPENDENCIES](#dependencies)
+- [PYTHON VIRTUAL ENVIRONMENT](#python-virtual-environment)
+- [REPOSITORY CONTENT](#repository-content)
+- [ARCHITECTURE](#architecture)
+- [DEEP LEARNING MODEL](#deep-learning-model)
+- [HOW TO RUN DEEP LEARNING ON FLASK WITH DOCKER COMPOSE](#how-to-run-deep-learning-on-flask-with-docker-compose)
+- [TEST SERVER & REST API](#test-server--rest-api)
+
+
+## PURPOSE
+
+The main goal of the project is to deploy on Flask a Tensodrflow model as microservice. The trained model should predict handwritten digits and it has been trained using MNIST dataset. REST API are used to send image to the server and return the predictions to the customer.
+
+
+## DEPENDENCIES
+
+The code has been tested using:
+
+* Python (3.9): an interpreted high-level programming language for general-purpose programming.
+* Jupyter Lab (3.2.2): a web-based interactive development environment for Jupyter Notebooks, code and data.
+* Flask (2.0.2): a microframework for Python based on Werkzeug, Jinja 2 and good intentions.
+* Gunicorn (20.1.0): a Python WSGI HTTP Server for UNIX.
+* NGINX (1.21.3): a free, open-source, high-performance HTTP server, reverse proxy, and IMAP/POP3 proxy server.
+* Docker (19.03.13-ce): an open platform for developers and sysadmins to build, ship, and run distributed applications, whether on laptops, data center VMs, or the cloud.
+* Docker-Compose (1.29.2): a tool for defining and running multi-container Docker applications.
+* Keras (TensorFlow built-in): a high-level neural networks API, written in Python and capable of running on top of TensorFlow.
+* TensorFlow (2.7.0): an open source software Deep Learning library for high performance numerical computation using data flow graphs.
+* Matplotlib (3.4.3): a plotting library for Python and its numerical mathematics extension NumPy.
+* NumPy (1.21.4): a library for Python, adding support for large, multi-dimensional arrays and matrices, along with a large collection of high-level mathematical functions to operate on these arrays.
+* scikit-image (0.18.3): a collection of algorithms for image processing with Python.
+
+### PYTHON VIRTUAL ENVIRONMENT
+
+Virtual environment (<env_name>=**dlflask39**) can be generated from **requirements.txt** file located in the repository.
+
+
+Command to configure virtual environment with venv:
+
+```bash
+~/deeplearning_flask$ python3 -m venv dlflask39
+~/deeplearning_flask$ source dlflask39/bin/activate
+(dlflask39)~/deeplearning_flask$ python3 -m pip install pip==21.3.1
+(dlflask39)~/deeplearning_flask$ python3 -m pip install setuptools==58.5.3
+(dlflask39)~/deeplearning_flask$ python3 -m pip install -r requirements.txt
+```
+
+## REPOSITORY CONTENT
+
+The repository main folder contains:
+
+```bash
+deeplearning_flask
+├── .env.example
+├── app
+│   ├── app
+│   │   ├── __init__.py
+│   │   ├── api.py
+│   │   ├── model.py
+│   │   ├── static
+│   │   │   └── 4.jpg
+│   │   └── templates
+│   │       └── dlflask.html
+│   ├── config.py
+│   ├── Makefile
+│   ├── mnist_model.h5
+│   ├── server.py
+│   └── tests
+│       ├── __init__.py
+│       ├── conftest.py
+│       └── test_app.py
+├── Deep Learning MNIST prediction model with Keras.ipynb
+├── docker-compose.yml
+├── Dockerfile
+├── docs
+├── nginx
+│   └── conf.d
+│       └── local.conf
+├── README.md
+└── requirements.txt
+```
+
+## ARCHITECTURE
+
+The architecture created with docker-compose uses two different Docker containers for:
+
+* NGINX.
+* Flask and Gunicorn.
+
+The following diagram illustrates the architecture in blocks:
+
+![Architecture](docs/architecture.png)
+
+## DEEP LEARNING MODEL
+
+The definition and training of the deep learning MNIST model was done through a notebook in Jupyter Lab. The employed notebook is stored in the main folder, to run it use the command shown below:
+
+```bash
+(dlflask39)~/deeplearning_flask$ jupyter lab Deep\ Learning\ MNIST\ prediction\ model\ with\ Keras.ipynb
+```
+
+## HOW TO RUN DEEP LEARNING ON FLASK WITH DOCKER COMPOSE
+
+The steps and commands to run the deep learning model on the Flask server with docker-compose are described below.
+
+Before executing docker-compose is strongly recommended to close other applications to free up resources and ports to avoid potential issues. Then docker-compose can be executed to build services.
+
+```bash
+~/deeplearning_flask$ docker-compose build
+```
+
+Next step consists in executing docker-compose up command.
+
+```bash
+~/deeplearning_flask$ docker-compose up
+```
+
+If everything goes fine at the end it should appear something similar to:
+
+```bash
+...
+...
+web_1    | 2021-11-25 17:30:17.818273: I tensorflow/compiler/xla/service/service.cc:176]   StreamExecutor device (0): Host, Default Version
+```
+
+## TEST SERVER & REST API
+
+There are different ways to check that the server is running properly. One is opening a web browser such as Chrome or Firefox and paste the following URL:
+
+```bash
+http://127.0.0.1/
+```
+
+The web browser should show the text "Deep Learning on Flask".
+
+REST API can be tested with pytest or curl.
+
+It is possible to execute tests of Flask microservice created with pytest from inside the Flask Docker container using Makefile:
+
+```bash
+~/deeplearning_flask$ docker exec -it deeplearning_flask_web_1 /bin/bash
+~/app# make test
+...
+test_app.py ..                                                         [100%]
+```
+
+A POST example using curl from outside Docker container is shown below:
+
+```bash
+~/deeplearning_flask$ curl -F file=@app/app/static/4.jpg -X POST 'http://127.0.0.1/api/predictlabel' | json_pp
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100 11650  100   489  100 11161    321   7347  0:00:01  0:00:01 --:--:--  7664
+{
+  "most_probable_label": "4",
+  "predictions": [
+    {
+      "label": "0",
+      "probability": "8.025511e-09"
+    },
+    {
+      "label": "1",
+      "probability": "1.9455256e-05"
+    },
+    {
+      "label": "2",
+      "probability": "1.4459256e-05"
+    },
+    {
+      "label": "3",
+      "probability": "9.0475e-06"
+    },
+    {
+      "label": "4",
+      "probability": "0.9971827"
+    },
+    {
+      "label": "5",
+      "probability": "7.5980934e-06"
+    },
+    {
+      "label": "6",
+      "probability": "1.1683321e-06"
+    },
+    {
+      "label": "7",
+      "probability": "0.0018591178"
+    },
+    {
+      "label": "8",
+      "probability": "0.0005154088"
+    },
+    {
+      "label": "9",
+      "probability": "0.00039107347"
+    }
+  ],
+  "success": true
+}
+```
+
+

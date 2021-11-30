@@ -1,0 +1,30 @@
+version: "3.7"
+
+services:
+  web:
+    build: .
+    env_file:
+      - .env.example
+    volumes:
+      - static_volume:/app/app/static
+    networks:
+      - nginx_network
+
+  nginx:
+    image: nginx:1.21.3-alpine
+    ports:
+      - 80:80
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - static_volume:/app/app/static:ro
+    depends_on:
+      - web
+    networks:
+      - nginx_network
+
+networks:
+  nginx_network:
+    driver: bridge
+
+volumes:
+  static_volume:
